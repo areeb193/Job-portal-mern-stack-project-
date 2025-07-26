@@ -2,11 +2,15 @@ import React, {useState} from 'react'
 import Navbar from '../shared/Navbar'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { RadioGroup } from '@/components/ui/radio-group'
-import { toast } from 'sonner'
+import { toast, Toaster } from 'sonner'
 import axios from 'axios'
 import { USER_API_END_POINT } from '../../utils/constant'
+import { useDispatch, useSelector } from 'react-redux'
+import { setLoading } from '../../redux/authSlice'
+import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 const Login = () => {
 
@@ -15,6 +19,9 @@ const Login = () => {
       password: '',
       role: 'student',
     });
+    const {loading} = useSelector((state) => state.auth);
+     const Navigate = useNavigate();
+     const dispatch = useDispatch();
     const changeEventHandler = (e) => {
       setInput({
         ...input,
@@ -25,6 +32,7 @@ const Login = () => {
     const submitHandler = async (e) => {
     e.preventDefault();
     try {
+      dispatch(setLoading(true));
       const res = await axios.post(`${USER_API_END_POINT}/Login`, input, {
         headers: {
           "Content-Type": "application/json"
@@ -32,12 +40,14 @@ const Login = () => {
         withCredentials: true
       });
       if(res.data.success) {
+        toast.success(`Welcome, ${res.data.user?.fullname || 'User'}!`);
         Navigate('/');
-        toast.success(res.data.message);
       }
     } catch (error) {
       console.error(error);
       toast.error(error.response.data.message);
+    }finally {
+      dispatch(setLoading(false));
     }
   };
     
@@ -93,8 +103,11 @@ const Login = () => {
               </div>
             </RadioGroup>
           </div>
-          <button type='submit' className='w-full my-4 bg-black text-amber-50'>Login</button>
-          <span className='text-sm'> Dont have an account? <Link to="/signup" className='text-blue-600'>Signup</Link></span>
+          {
+            loading ? <Button className="w-full my-4"><Loader2 className='mr-2 h-4 w-4 animate-spin' /> please wait </Button> :<button type='submit' className='w-full my-4 bg-black text-amber-50'>Login</button>
+          }
+          
+          <span className='text-sm'> Dont have an account? <Link to="/signup" className='text-white bg-blue-600 px-2 py-1 rounded'>Signup</Link></span>
         </form>
       </div>
     </div>

@@ -18,15 +18,15 @@ const Navbar = () => {
         </div>
         <div className='flex items-center gap-12'>
           <ul className='flex font-medium item-center gap-5'>
-            <li>Home</li>
-            <li>jobs</li>
-            <li>Browser</li>
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/jobs">jobs</Link></li>
+            <li><Link to="/browse">Browse</Link></li>
           </ul>
           {
             !user ? (
               <div className='flex items-center gap-3'>
-                <Link to="/Login"><button className='w-28 h-10 border border-gray-300 rounded-2xl px-4 py-2' type='button'> Login</button></Link>
-                <Link to="/Signup"><button className='w-28 h-10 border border-[#6A38C2] rounded-2xl px-4 py-2 bg-[#6A38C2]  hover:bg-[#5A2BB2]'type='button'>Sign Up </button></Link>
+                <Link to="/Login"><Button variant="outline" className="mr-2">Login</Button></Link>
+                <Link to="/Signup"><Button className="bg-[#7209b7] text-white">Signup</Button></Link>
               </div>
             ) : (
               <Popover>
@@ -43,9 +43,7 @@ const Navbar = () => {
                       <AvatarFallback>CN</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className='font-medium'>
-                        Areeb
-                      </h4>
+                      <h4 className='font-medium'>Areeb</h4>
                       <p className='text-sm text-muted-foreground'>ladekdeddb dejdj </p>
                     </div>
                   </div>
@@ -54,10 +52,12 @@ const Navbar = () => {
                       <User2 />
                       <Button variant="link">View profile</Button>
                     </div>
-
-                    <div className='flex w-fit items-center gap-2 cursor-pointer'>  <Button variant="link">
-                      <LogOut />
-                      logout</Button></div>
+                    <div className='flex w-fit items-center gap-2 cursor-pointer'>
+                      <Button variant="link">
+                        <LogOut />
+                        logout
+                      </Button>
+                    </div>
                   </div>
                 </PopoverContent>
               </Popover>
