@@ -2,8 +2,13 @@ import React from 'react'
 import Navbar from './shared/Navbar'
 import { Avatar, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
-import { Pen } from 'lucide-react'
+import { Contact, Mail, Pen } from 'lucide-react'
+import { Badge } from './ui/badge'
+import { Label } from './ui/label'
+import AppliedJobTable from './AppliedJobTable'
+const Skills = ['JavaScript', 'React', 'Node.js', 'CSS'];
 const Profile = () => {
+  const isResume=true;
   return (
     <div>
         <Navbar/>
@@ -22,8 +27,40 @@ const Profile = () => {
            <Button className='text-right' variant="outline"><Pen/></Button>
         
             </div>
-            
+            <div className='my-5'>
+              <div className='flex items-center gap-3 my-2'>
+                <Mail/>
+              <span>q@gmail.com</span>
+              </div>
+              <div className='flex items-center gap-3 my-2'>
+                <Contact/>
+              <span>12345678</span>
+              
+              </div>
+              <h1>Skills</h1>
+              <div className='flex items-center gap-3 my-2'>
+                 {
+                Skills.length > 0
+                  ? Skills.map((item,index)=><Badge key={index}>{item}</Badge>)
+                  : <span>NA</span>
+               }
+
+              </div>
+              
+            </div>
+           <div className='grid w-full max-w-sm items-center gap-1.5'>
+
+            <Label className="text-md font-bold" >Resume</Label>
+            {
+              isResume? <a target='blank' href='https://youtube.com' className='text-blue-500 w-full hover:underline cursor-pointer'> Youtube </a>: <span>NA</span>
+            }
+           
+           </div>
         </div>
+         <div className='max-w-4xl mx-auto bg-white rounded-2xl'>
+            <h1 className='font-bold text-lg'>Applied jobs</h1>
+             <AppliedJobTable/>
+           </div>
     </div>
   )
 }
