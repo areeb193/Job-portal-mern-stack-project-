@@ -55,7 +55,7 @@ const Signup = () => {
         withCredentials: true
       });
       if(res.data.success) {
-        navigate('/Login');
+        navigate('/login');
         toast.success(res.data.message);
       }
     } catch (error) {
@@ -146,7 +146,7 @@ const Signup = () => {
             </div>
           </div>
           <button type='submit' className='w-full my-4 bg-black text-amber-50'>Signup</button>
-          <span className='text-sm'> Already have an account? <Link to="/Login" className='text-blue-600'>Login</Link></span>
+          <span className='text-sm'> Already have an account? <Link to="/login" className='text-blue-600'>Login</Link></span>
         </form>
       </div>
     </div>

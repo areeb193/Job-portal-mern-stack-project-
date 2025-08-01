@@ -22,7 +22,7 @@ const Profile = () => {
         <div className='flex justify-between'>
           <div className='flex items-center gap-4'>
             <Avatar className="h-24 w-24">
-              <AvatarImage src="https://tse1.mm.bing.net/th/id/OIP.afQdiNPi7rhMZnP6xqoyLwHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" alt="profile" />
+              <AvatarImage src={user?.profile?.profilePicture} alt="profile" />
             </Avatar>
             <div>
               <h1 className='font-medium text-xl'>{user?.fullname}</h1>
@@ -57,7 +57,15 @@ const Profile = () => {
 
           <Label className="text-md font-bold" >Resume</Label>
           {
-            isResume ? <a target='blank' href='https://youtube.com' className='text-blue-500 w-full hover:underline cursor-pointer'> Youtube </a> : <span>NA</span>
+            isResume ? (
+              <a 
+                target='_blank' 
+                href={`https://docs.google.com/viewer?url=${encodeURIComponent(user?.profile?.resume)}&embedded=true`}
+                className='text-blue-500 w-full hover:underline cursor-pointer'
+              >
+                {user?.profile?.resumeOriginalName}
+              </a>
+            ) : <span>NA</span>
           }
 
         </div>

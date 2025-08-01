@@ -7,6 +7,7 @@ import userRoutes from './routes/user.route.js';
 import jobRoutes from './routes/job.route.js';
 import companyRoutes from './routes/company.route.js';
 import applicationRoutes from './routes/application.route.js';
+import jobHuntRoutes from './routes/jobHunt.route.js';
 
 dotenv.config({});
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/company', companyRoutes);
 app.use('/api/v1/job', jobRoutes);
 app.use('/api/v1/application', applicationRoutes);
+app.use('/api/v1/job-hunt', jobHuntRoutes);
 //http://localhost:8000/api/v1/application/apply/:id
 //http://localhost:8000/api/v1/application/get
 //http://localhost:8000/api/v1/application/:id/applicants

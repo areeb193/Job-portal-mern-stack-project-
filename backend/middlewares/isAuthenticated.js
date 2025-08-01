@@ -6,7 +6,7 @@ const isAuthenticated = (req, res, next) => {
         if (!token) {
             return res.status(401).json({ message: 'Unauthorized access', success: false });
         }
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.SECRET_KEY || 'fallback-secret-key');
         if (!decoded) {
             return res.status(401).json({ message: 'Invalid token', success: false });
         }    ;
