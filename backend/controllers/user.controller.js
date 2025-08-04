@@ -86,7 +86,7 @@ export const login = async (req, res) => {
             UserId: user._id,
             
         }
-        const token = await  jwt.sign(tokenData, process.env.SECRET_KEY || 'fallback-secret-key', { expiresIn: '1h' });
+        const token = await  jwt.sign(tokenData, process.env.SECRET_KEY || 'fallback-secret-key', { expiresIn: '7d' });
         user = {
             _id: user._id,
             fullname: user.fullname,
@@ -95,7 +95,7 @@ export const login = async (req, res) => {
             role: user.role,
             profile: user.profile,
         }
-        return res.status(200).cookie("token",token,{maxAge:1*24*60*60*1000, httpOnly: true, secure: 'strict'}).json({
+        return res.status(200).cookie("token",token,{maxAge:1*24*60*60*1000, httpOnly: true, secure: process.env.NODE_ENV === 'production'}).json({
             message: `Login successful ${user.fullname}`,
             user,
             success: true,})

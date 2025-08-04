@@ -13,7 +13,8 @@ import {
   getJobSearchById, 
   deleteJobSearch,
   clearCurrentSearch,
-  clearError 
+  clearError,
+  resetLoading
 } from '../redux/jobHuntSlice'
 
 // Predefined internship fields
@@ -49,24 +50,44 @@ const JobHunt = () => {
   const [showHistory, setShowHistory] = useState(false)
 
   const dispatch = useDispatch()
+  const jobHuntState = useSelector((state) => state.jobHunt)
+  const { user } = useSelector((state) => state.auth)
+  
+  // Provide fallback values if state is not available
   const { 
-    currentSearch, 
-    jobHistory, 
-    loading, 
-    error, 
-    historyLoading, 
-    historyError 
-  } = useSelector((state) => state.jobHunt)
+    currentSearch = { jobs: [], searchQuery: null, searchId: null, totalResults: 0 }, 
+    jobHistory = [], 
+    loading = false, 
+    error = null, 
+    historyLoading = false, 
+    historyError = null 
+  } = jobHuntState || {}
+
+  // Debug logging
+  console.log('JobHunt State:', { loading, error, jobHuntState })
+  
+  // Add effect to monitor loading state changes
+  useEffect(() => {
+    console.log('Loading state changed:', loading)
+  }, [loading])
 
   // Load job history on component mount
   useEffect(() => {
-    dispatch(getJobHistory())
+    try {
+      dispatch(getJobHistory())
+    } catch (error) {
+      console.error('Error loading job history:', error)
+    }
   }, [dispatch])
 
   // Clear errors when component unmounts
   useEffect(() => {
     return () => {
-      dispatch(clearError())
+      try {
+        dispatch(clearError())
+      } catch (error) {
+        console.error('Error clearing error state:', error)
+      }
     }
   }, [dispatch])
 
@@ -79,24 +100,52 @@ const JobHunt = () => {
     }
 
     setCurrentPage(1) // Reset to first page on new search
-    dispatch(searchJobs({ city, country, field, page: 1, numPages }))
+    console.log('Starting search with:', { city, country, field, page: 1, numPages })
+    
+    try {
+      // Add a small delay to test loading state
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const result = await dispatch(searchJobs({ city, country, field, page: 1, numPages })).unwrap()
+      console.log('Search completed successfully:', result)
+    } catch (error) {
+      console.error('Error searching jobs:', error)
+      toast.error(error || 'Failed to search jobs. Please try again.')
+      // Force clear loading state if there's an error
+      dispatch(resetLoading())
+    }
   }
 
-  const handleLoadSearch = (searchId) => {
-    dispatch(getJobSearchById(searchId))
-    setShowHistory(false)
+  const handleLoadSearch = async (searchId) => {
+    try {
+      await dispatch(getJobSearchById(searchId)).unwrap()
+      setShowHistory(false)
+    } catch (error) {
+      console.error('Error loading search:', error)
+      toast.error(error || 'Failed to load search. Please try again.')
+    }
   }
 
-  const handleDeleteSearch = (searchId) => {
-    dispatch(deleteJobSearch(searchId))
-    toast.success('Search deleted successfully')
+  const handleDeleteSearch = async (searchId) => {
+    try {
+      await dispatch(deleteJobSearch(searchId)).unwrap()
+      toast.success('Search deleted successfully')
+    } catch (error) {
+      console.error('Error deleting search:', error)
+      toast.error(error || 'Failed to delete search. Please try again.')
+    }
   }
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = async (newPage) => {
     if (newPage < 1) return
     
     setCurrentPage(newPage)
-    dispatch(searchJobs({ city, country, field, page: newPage, numPages }))
+    try {
+      await dispatch(searchJobs({ city, country, field, page: newPage, numPages })).unwrap()
+    } catch (error) {
+      console.error('Error changing page:', error)
+      toast.error(error || 'Failed to load page. Please try again.')
+    }
   }
 
   const formatDate = (dateString) => {
@@ -235,6 +284,26 @@ const JobHunt = () => {
                     Search Internships
                   </>
                 )}
+              </Button>
+              {loading && (
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => dispatch(resetLoading())}
+                  className="ml-2"
+                >
+                  Reset Loading
+                </Button>
+              )}
+              <Button 
+                type="button" 
+                variant="outline"
+                size="sm"
+                onClick={() => console.log('Current loading state:', loading)}
+                className="ml-2"
+              >
+                Debug Loading
               </Button>
             </div>
           </form>

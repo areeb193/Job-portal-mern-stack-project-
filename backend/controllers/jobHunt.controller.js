@@ -1,6 +1,37 @@
 import { JobHunt } from '../models/jobHunt.model.js';
 import axios from 'axios';
 
+// Function to make API call to RapidAPI (extracted for reuse)
+const makeRapidAPICall = async (searchQuery, page, numPages, country) => {
+  const options = {
+    method: 'GET',
+    url: 'https://jsearch.p.rapidapi.com/search',
+    params: {
+      query: searchQuery,
+      page: page.toString(),
+      num_pages: numPages.toString(),
+      country: country.toLowerCase(),
+      date_posted: 'all'
+    },
+    headers: {
+      'x-rapidapi-key': 'f0b42ac17dmsh109237a79ab5c5cp195c47jsne2f1c8e40881',
+      'x-rapidapi-host': 'jsearch.p.rapidapi.com'
+    }
+  };
+
+  const response = await axios.request(options);
+  
+  let jobs = [];
+  let totalResults = 0;
+
+  if (response.data.data && response.data.data.length > 0) {
+    jobs = response.data.data;
+    totalResults = response.data.data.length;
+  }
+
+  return { jobs, totalResults };
+};
+
 export const searchJobs = async (req, res) => {
   try {
     const { city, country, field, page = 1, numPages = 3 } = req.body;
@@ -13,6 +44,8 @@ export const searchJobs = async (req, res) => {
       });
     }
 
+    console.log(`Making API call for ${field || 'general'} search in ${city}, ${country}`);
+    
     // Build search query based on field
     let searchQuery = `internship jobs in ${city}`;
     if (field && field.trim()) {
@@ -20,33 +53,11 @@ export const searchJobs = async (req, res) => {
     }
 
     // Make API call to RapidAPI
-    const options = {
-      method: 'GET',
-      url: 'https://jsearch.p.rapidapi.com/search',
-      params: {
-        query: searchQuery,
-        page: page.toString(),
-        num_pages: numPages.toString(),
-        country: country.toLowerCase(),
-        date_posted: 'all'
-      },
-      headers: {
-        'x-rapidapi-key': 'f0b42ac17dmsh109237a79ab5c5cp195c47jsne2f1c8e40881',
-        'x-rapidapi-host': 'jsearch.p.rapidapi.com'
-      }
-    };
+    const apiResult = await makeRapidAPICall(searchQuery, page, numPages, country);
+    const jobs = apiResult.jobs;
+    const totalResults = apiResult.totalResults;
 
-    const response = await axios.request(options);
-    
-    let jobs = [];
-    let totalResults = 0;
-
-    if (response.data.data && response.data.data.length > 0) {
-      jobs = response.data.data;
-      totalResults = response.data.data.length;
-    }
-
-    // Save to MongoDB
+    // Save to MongoDB (always save user's search history)
     const jobHuntData = new JobHunt({
       userId,
       searchQuery: { city, country, field: field || null },
@@ -162,4 +173,6 @@ export const deleteJobSearch = async (req, res) => {
       success: false 
     });
   }
-}; 
+};
+
+ 

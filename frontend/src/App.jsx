@@ -7,8 +7,12 @@ import Home from './components/Home';
 import Jobs from './components/jobs';
 import Browse from './components/Browse';
 import Profile from './components/Profile';
+import Companies from './components/admin/Companies';
 import JobDescription from './components/JobDescription';
 import JobHunt from './components/JobHunt';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import CompanyCreate from './components/admin/CompanyCreate';
+import CompanySetup from './components/admin/CompanySetup';
 const appRouter = createBrowserRouter([
   {
     path: '/',
@@ -24,26 +28,44 @@ const appRouter = createBrowserRouter([
   },
   {
     path: '/jobs',
-    element: <Jobs/>
+    element: <ProtectedRoute><Jobs/></ProtectedRoute>
   },
   {
     path: '/browse',
-    element: <Browse/>
+    element: <ProtectedRoute><Browse/></ProtectedRoute>
   }
   ,
   {
     path: "/description/:id" ,
-    element: <JobDescription/> 
+    element: <ProtectedRoute><JobDescription/></ProtectedRoute> 
 
   },
   {
     path: '/profile',
-    element: <Profile/>
+    element: <ProtectedRoute><Profile/></ProtectedRoute>
   },
   {
     path: '/job-hunt',
-    element: <JobHunt/>
+    element: <ProtectedRoute><JobHunt/></ProtectedRoute>
+  },
+  //admin recruiter kay liya routes
+  {
+    path: "/admin/companies",
+
+    element : <Companies/>
+  },
+  {
+    path: "/admin/companies/create",
+
+    element : <CompanyCreate/>
   }
+  ,
+  {
+    path: "/admin/companies/:id",
+
+    element : <CompanySetup/>
+  }
+
 ])
 
 function App() {

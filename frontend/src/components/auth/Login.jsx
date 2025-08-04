@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { RadioGroup } from '@/components/ui/radio-group'
 import { toast, Toaster } from 'sonner'
-import axios from 'axios'
+import axiosInstance from '../../utils/axiosConfig'
 import { USER_API_END_POINT } from '../../utils/constant'
 import { useDispatch, useSelector } from 'react-redux'
 import { setLoading, setUser } from '../../redux/authSlice'
@@ -33,11 +33,10 @@ const Login = () => {
     e.preventDefault();
     try {
       dispatch(setLoading(true));
-      const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
+      const res = await axiosInstance.post(`${USER_API_END_POINT}/login`, input, {
         headers: {
           "Content-Type": "application/json"
-        },
-        withCredentials: true
+        }
       });
       if(res.data.success) {
         dispatch(setUser(res.data.user));
@@ -46,7 +45,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || 'Login failed');
     }finally {
       dispatch(setLoading(false));
     }

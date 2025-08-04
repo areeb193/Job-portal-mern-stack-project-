@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { JOB_HUNT_API_END_POINT } from '../utils/constant';
 
 // Async thunks
@@ -7,10 +7,9 @@ export const searchJobs = createAsyncThunk(
   'jobHunt/searchJobs',
   async ({ city, country, field, page = 1, numPages = 3 }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${JOB_HUNT_API_END_POINT}/search`,
-        { city, country, field, page, numPages },
-        { withCredentials: true }
+        { city, country, field, page, numPages }
       );
       return response.data;
     } catch (error) {
@@ -23,9 +22,8 @@ export const getJobHistory = createAsyncThunk(
   'jobHunt/getJobHistory',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${JOB_HUNT_API_END_POINT}/history`,
-        { withCredentials: true }
+      const response = await axiosInstance.get(
+        `${JOB_HUNT_API_END_POINT}/history`
       );
       return response.data;
     } catch (error) {
@@ -38,9 +36,8 @@ export const getJobSearchById = createAsyncThunk(
   'jobHunt/getJobSearchById',
   async (searchId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${JOB_HUNT_API_END_POINT}/search/${searchId}`,
-        { withCredentials: true }
+      const response = await axiosInstance.get(
+        `${JOB_HUNT_API_END_POINT}/search/${searchId}`
       );
       return response.data;
     } catch (error) {
@@ -53,9 +50,8 @@ export const deleteJobSearch = createAsyncThunk(
   'jobHunt/deleteJobSearch',
   async (searchId, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(
-        `${JOB_HUNT_API_END_POINT}/search/${searchId}`,
-        { withCredentials: true }
+      const response = await axiosInstance.delete(
+        `${JOB_HUNT_API_END_POINT}/search/${searchId}`
       );
       return { searchId, ...response.data };
     } catch (error) {
@@ -94,6 +90,10 @@ const jobHuntSlice = createSlice({
     clearError: (state) => {
       state.error = null;
       state.historyError = null;
+    },
+    resetLoading: (state) => {
+      state.loading = false;
+      state.historyLoading = false;
     }
   },
   extraReducers: (builder) => {
@@ -115,7 +115,7 @@ const jobHuntSlice = createSlice({
       })
       .addCase(searchJobs.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || 'Failed to search jobs';
       });
 
     // Get Job History
@@ -153,7 +153,7 @@ const jobHuntSlice = createSlice({
       })
       .addCase(getJobSearchById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || 'Failed to load search';
       });
 
     // Delete Job Search
@@ -177,5 +177,5 @@ const jobHuntSlice = createSlice({
   }
 });
 
-export const { clearCurrentSearch, clearError } = jobHuntSlice.actions;
+export const { clearCurrentSearch, clearError, resetLoading } = jobHuntSlice.actions;
 export default jobHuntSlice.reducer; 

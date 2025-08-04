@@ -19,4 +19,6 @@ router.get('/search/:searchId', getJobSearchById);
 // Delete a job search
 router.delete('/search/:searchId', deleteJobSearch);
 
+
+
 export default router; 

@@ -35,14 +35,14 @@ export const applyJob = async (req, res) => {
 export const getAppliedJobs = async (req, res) => {
    try {
     const userId = req.id;
-    const applications = await Application.find({ applicant: userId }).sort({ createdAt: -1 }).populate({ path: 'job', option :{sort:{ createdAt: -1 }}, populate: { path: 'company',  option :{sort:{ createdAt: -1 }}} });
-    if(!applications){
+    const applications = await Application.find({ applicant: userId }).sort({ createdAt: -1 }).populate({ path: 'job', options: {sort: { createdAt: -1 }}, populate: { path: 'company', options: {sort: { createdAt: -1 }}} });
+    if(!applications || applications.length === 0){
         return res.status(404).json({ message: 'No applications found', success: false });
-
-    };
+    }
     return res.status(200).json({ message: 'Applications retrieved successfully', success: true, applications });
    } catch (error) {
-    
+    console.log(error);
+    return res.status(500).json({ message: 'Server error', success: false });
    }
 
 };
@@ -50,13 +50,14 @@ export const getAppliedJobs = async (req, res) => {
 export const getApplicants = async (req, res) => {
  try {
     const jobID=req.params.id;
-    const job= await Job.findById(jobID).populate({path: 'applicantions',options: { sort: { createdAt: -1 } }, populate: { path: 'applicant'} });
+    const job= await Job.findById(jobID).populate({path: 'applications', options: { sort: { createdAt: -1 } }, populate: { path: 'applicant', select: 'fullname email'} });
     if(!job){
         return res.status(404).json({ message: 'Job not found', success: false });
     }
-    return res.status(200).json({ message: 'Applicants retrieved successfully', success: true, applicants: job.applications });
+    return res.status(200).json({ message: 'Applicants retrieved successfully', success: true, applicants: job.applications || [] });
  } catch (error) {
-    
+    console.log(error);
+    return res.status(500).json({ message: 'Server error', success: false });
  }
 
 }

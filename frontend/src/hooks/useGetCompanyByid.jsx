@@ -1,24 +1,25 @@
 import { useEffect } from 'react';
-import axiosInstance from '../utils/axiosConfig';
-import { JOB_API_END_POINT } from '../utils/constant';
+import axios from 'axios';
+import { COMPANY_API_END_POINT, JOB_API_END_POINT } from '../utils/constant';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAllJobs } from '../redux/jobSlice';
+import { setSingleCompany } from '../redux/companySlice';
 
-const useGetAllJobs = () => {
+const useGetCompanyByid = (companyId) => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     
     useEffect(() => {
-        const fetchAllJobs = async () => {
+        const fetchSingleCompany = async () => {
             if (!user) {
                 console.log('User not authenticated, skipping job fetch');
                 return;
             }
             
             try {
-                const res = await axiosInstance.get(`${JOB_API_END_POINT}/get`);
+                const res = await axios.get(`${COMPANY_API_END_POINT}/get/${companyId}`,{withCredentials:true});
                 if (res.data.success) {
-                    dispatch(setAllJobs(res.data.jobs));
+                    dispatch(setSingleCompany(res.data.company));
                 }
             }
             catch (error) {
@@ -28,8 +29,8 @@ const useGetAllJobs = () => {
                 }
             }
         };
-        fetchAllJobs();
-    }, [dispatch, user]);
+        fetchSingleCompany();
+    }, [companyId,dispatch]);
 };
 
-export default useGetAllJobs;
+export default useGetCompanyByid;

@@ -7,15 +7,15 @@ const companySchema = new mongoose.Schema({
   },
   description: {   
     type: String,
-    required: true,
+    default: '',
   },
    website: {   
     type: String,
-    required: true,
+    default: '',
   },
    location: {   
     type: String,
-   
+    default: '',
   },
    logo: {   
     type: String,
