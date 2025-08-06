@@ -12,7 +12,13 @@ import { toast } from "sonner";
 import { setLoading } from "../../redux/authSlice";
 import { useSelector } from "react-redux";
 import { Company } from "../../../../backend/models/company.model";
+import  useGetCompanyById from '../../hooks/useGetCompanyByid'
 const CompanySetup = () => {
+  const params = useParams();
+
+
+  useGetCompanyById(params.id);
+
   const [input, setInput] = useState({
     name: "",
     description: "",
@@ -22,7 +28,7 @@ const CompanySetup = () => {
   });
   const {singleCompany}= useSelector(store=>store.company)
   const [loading, setloading] = useState(false);
-  const params = useParams();
+  
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
@@ -59,9 +65,9 @@ const CompanySetup = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error);
+      toast.error(error.response?.data?.message || error.message || "Something went wrong");
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 

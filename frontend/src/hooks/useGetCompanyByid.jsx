@@ -23,9 +23,11 @@ const useGetCompanyByid = (companyId) => {
                 }
             }
             catch (error) {
-                console.error('Error fetching jobs:', error);
+                console.error('Error fetching company:', error);
                 if (error.response?.status === 401) {
-                    console.log('Authentication required for fetching jobs');
+                    console.log('Authentication required for fetching company');
+                } else if (error.response?.status === 500) {
+                    console.log('Server error while fetching company');
                 }
             }
         };

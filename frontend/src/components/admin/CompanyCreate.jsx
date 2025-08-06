@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 
 const CompanyCreate = () => {
   const navigate = useNavigate();
+  
   const dispatch = useDispatch();
   const [companyName , setCompanyName] = useState();
   const [loading, setLoading] = useState(false);

@@ -8,9 +8,10 @@ import useGetAllCompanies from "../../hooks/useGetAllCompanies";
 import { useDispatch } from "react-redux";
 import { setsearchCompanyByText } from "../../redux/companySlice";
 import { useState } from "react";
-const Companies = () => {
+import AdminJobsTable from "./AdminJobsTable";
+const Adminjobs = () => {
   const navigate = useNavigate();
-  useGetAllCompanies();
+  
   const [input , setinput] = useState("");
   const dispatch = useDispatch();
   useEffect(()=>{
@@ -25,13 +26,13 @@ const Companies = () => {
            onChange={(e) => setinput(e.target.value)}
            />
           <Button onClick={() => navigate("/admin/companies/create")}>
-            New Company
+            New jobs
           </Button>
         </div>
-        <CompaniesTable />
+        <AdminJobsTable/>
       </div>
     </div>
   );
 };
 
-export default Companies;
+export default Adminjobs;

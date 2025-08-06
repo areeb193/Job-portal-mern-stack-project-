@@ -58,14 +58,22 @@ export const updateCompany = async (req, res) => {
     try {
         const companyId = req.params.id;
         const {name, description, website, location} = req.body;
-        const file = req.file;
-        const fileUri =getDataUri(file);
-        const cloudeResponse= await cloudinary.uploader.upload(fileUri.content);
-        const logo = cloudeResponse.secure_url;
+        
+        let updateData = {name, description, website, location};
+        
+        // Only upload file if it exists
+        if (req.file) {
+            try {
+                const fileUri = getDataUri(req.file);
+                const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+                updateData.logo = cloudResponse.secure_url;
+            } catch (uploadError) {
+                console.log('File upload error:', uploadError);
+                return res.status(400).json({message: 'File upload failed', success: false});
+            }
+        }
 
-
-        const updateData= {name, description, website, location ,logo};
-        const company = await Company.findByIdAndUpdate(req.params.id, updateData, {new: true});
+        const company = await Company.findByIdAndUpdate(companyId, updateData, {new: true});
 
         if (!company) {
             return res.status(404).json({message: 'Company not found', success: false});
@@ -73,7 +81,7 @@ export const updateCompany = async (req, res) => {
         
         return res.status(200).json({message: 'Company updated successfully', success: true, company});
     } catch (error) {
-        console.log(error);
+        console.log('Update company error:', error);
         return res.status(500).json({message: 'Server error', success: false});
     }
 }

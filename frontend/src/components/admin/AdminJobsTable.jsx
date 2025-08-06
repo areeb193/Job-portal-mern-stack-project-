@@ -14,57 +14,73 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-const CompaniesTable = () => {
+import store from "../../redux/store";
+import useGetAllAdminJobs from "../../hooks/useGetAllAdminJobs";
+const AdminJobsTable = () => {
+  // Fetch admin jobs
+  useGetAllAdminJobs();
+  
   const { companies, searchCompanyByText } = useSelector((store) => store.company);
-  const [filterCompany , setfilterCompany] =useState(companies);
+  const {allAdminJobs} = useSelector(store => store.job)
+  const [filterjobs , setfilterjobs] =useState(allAdminJobs || []);
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
   useEffect(()=>{
-    const filteredCompany = companies.length > 0 && companies.filter((company)=>{
+    setIsLoading(false);
+    if (!allAdminJobs || allAdminJobs.length === 0) {
+      setfilterjobs([]);
+      return;
+    }
+    
+    const filteredJobs = allAdminJobs.filter((job)=>{
       if(!searchCompanyByText){
         return true
       };
-      return company?.name?.toLowerCase().includes(searchCompanyByText.toLowerCase());
+      return job?.company?.name?.toLowerCase().includes(searchCompanyByText.toLowerCase());
     });
-    setfilterCompany(filteredCompany);
-  },[companies,searchCompanyByText])
+    setfilterjobs(filteredJobs);
+  },[allAdminJobs,searchCompanyByText])
   return (
     <div>
       <Table>
-        <TableCaption>A List of your companies</TableCaption>
+        <TableCaption>A List of your recent posted jobs</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead> logo</TableHead>
-            <TableHead> Name</TableHead>
+            <TableHead> Company Name</TableHead>
+            <TableHead> Role</TableHead>
             <TableHead> Date</TableHead>
             <TableHead className="text-right"> Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {!companies || companies.length <= 0 ? (
+          {isLoading ? (
             <TableRow>
               <TableCell colSpan={4} className="text-center">
-                You have not registered any company yet
+                Loading jobs...
+              </TableCell>
+            </TableRow>
+          ) : !filterjobs || filterjobs.length <= 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center">
+                No jobs found
               </TableCell>
             </TableRow>
           ) : (
             <>
-              {filterCompany.map((company) => {
+              {filterjobs.map((job) => {
                 return (
-                  <TableRow key={company._id}>
-                    <TableCell>
-                      <Avatar>
-                        <AvatarImage src={company.logo} />
-                      </Avatar>
-                    </TableCell>
-                    <TableCell>{company.name}</TableCell>
-                    <TableCell>{company.createdAt.split("T")[0]}</TableCell>
+                  <TableRow key={job._id}>
+                    <TableCell>{job?.company?.name || 'N/A'}</TableCell>
+                    <TableCell>{job?.title || 'N/A'}</TableCell>
+                    <TableCell>{job?.createdAt ? job.createdAt.split("T")[0] : 'N/A'}</TableCell>
                     <TableCell className="text-right ">
                       <Popover>
                         <PopoverTrigger className="cursor-pointer">
                           <MoreHorizontal />
                         </PopoverTrigger>
                         <PopoverContent className="w-32">
-                          <div onClick={()=> navigate(`/admin/companies/${company._id}`)} className="flex items-center gap-2 w-fit ">
+                          <div onClick={()=> navigate(`/admin/jobs/${job._id}`)} className="flex items-center gap-2 w-fit ">
                             <Edit2 className="w-4 " />
                             <span>Edit</span>
                           </div>
@@ -82,4 +98,4 @@ const CompaniesTable = () => {
   );
 };
 
-export default CompaniesTable;
+export default AdminJobsTable;
