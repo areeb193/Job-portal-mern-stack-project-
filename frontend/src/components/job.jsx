@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from './ui/button'
 import { Bookmark } from 'lucide-react'
-import {Avatar, AvatarImage} from './ui/avatar'
+import {Avatar, AvatarImage, AvatarFallback} from './ui/avatar'
 import { Badge } from './ui/badge'
 import { useNavigate } from 'react-router-dom'
 const Job = ({job}) => {
@@ -23,12 +23,13 @@ const Job = ({job}) => {
       <div className='flex items-center gap-2 my-2'>
       <Button className="p-6" variant="outline" size="icon">
         <Avatar>
-            <AvatarImage src="https://tse1.mm.bing.net/th/id/OIP.afQdiNPi7rhMZnP6xqoyLwHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"/>
+            <AvatarImage src={job?.company?.logo} alt={job?.company?.name}/>
+            <AvatarFallback>{job?.company?.name?.charAt(0)?.toUpperCase() || 'C'}</AvatarFallback>
         </Avatar>
         </Button> 
         <div>
             <h1 className='font-medium text-lg'>{job?.company?.name}</h1>
-            <p className='text-sm text-gray-500'>az.</p>
+            <p className='text-sm text-gray-500'>{job?.company?.location}</p>
         </div>
      </div>
      <div>
@@ -37,7 +38,7 @@ const Job = ({job}) => {
      </div>
       <div className="flex item-center gap-2 mt-4">
              <Badge className="text-blue-700 font-bold" variant="ghost">{job?.position} Position</Badge>
-             <Badge className="text-[#F83002] font-bold" variant="ghost">{job?.jobtype}</Badge>
+             <Badge className="text-[#F83002] font-bold" variant="ghost">{job?.jobType}</Badge>
              <Badge className="text-[#7209b7] font-bold" variant="ghost">{job?.salary}</Badge>
          </div>
     <div className='flex justify-end mt-4 gap-4'>

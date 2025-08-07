@@ -8,7 +8,6 @@ import {
   TableHead,
   TableCell,
 } from "../ui/table";
-import { Avatar, AvatarImage } from "../ui/avatar";
 import { Edit2, MoreHorizontal } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
@@ -21,7 +20,7 @@ const AdminJobsTable = () => {
   useGetAllAdminJobs();
   
   const { companies, searchCompanyByText } = useSelector((store) => store.company);
-  const {allAdminJobs} = useSelector(store => store.job)
+  const {allAdminJobs , searchJobByText} = useSelector(store => store.job)
   const [filterjobs , setfilterjobs] =useState(allAdminJobs || []);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,13 +33,13 @@ const AdminJobsTable = () => {
     }
     
     const filteredJobs = allAdminJobs.filter((job)=>{
-      if(!searchCompanyByText){
+      if(!searchJobByText){
         return true
       };
-      return job?.company?.name?.toLowerCase().includes(searchCompanyByText.toLowerCase());
+      return job?.title?.toLowerCase().includes(searchJobByText.toLowerCase()) || job?.company?.name.toLowerCase().includes(searchJobByText.toLowerCase()) ;
     });
     setfilterjobs(filteredJobs);
-  },[allAdminJobs,searchCompanyByText])
+  },[allAdminJobs,searchJobByText])
   return (
     <div>
       <Table>
