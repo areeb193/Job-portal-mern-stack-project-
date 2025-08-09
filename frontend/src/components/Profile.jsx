@@ -9,9 +9,11 @@ import { Contact, Mail, Pen } from 'lucide-react'
 import { Badge } from './ui/badge'
 import { Label } from './ui/label'
 import AppliedJobTable from './AppliedJobTable'
+import useGetAppliedJobs from '../hooks/useGetAppliedjobs'
 const Skills = ['JavaScript', 'React', 'Node.js', 'CSS'];
 const isResume = true;
 const Profile = () => {
+  useGetAppliedJobs();
   const [open, setOpen] = useState(false);
   const { user } = useSelector(store => store.auth);
 
