@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from './ui/badge';
 import { useSelector } from 'react-redux';
+import ChatButton from './chat/ChatButton';
 
 const AppliedJobTable = () => {
   const { allAppliedJobs = [] } = useSelector(store => store.job);
@@ -49,6 +50,7 @@ const AppliedJobTable = () => {
             <TableHead>Company Name</TableHead>
             <TableHead>Job Role</TableHead>
             <TableHead className='text-right'>Status</TableHead>
+            <TableHead className='text-right'>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,6 +65,15 @@ const AppliedJobTable = () => {
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appliedJob.status)}`}>
                   {appliedJob.status || 'applied'}
                 </span>
+              </TableCell>
+              <TableCell className='text-right'>
+                <ChatButton
+                  applicationId={appliedJob._id}
+                  chatPartner={appliedJob.job?.company?.recruiter}
+                  jobTitle={appliedJob.job?.title}
+                  variant="text"
+                  className="text-sm"
+                />
               </TableCell>
             </TableRow>
           ))}

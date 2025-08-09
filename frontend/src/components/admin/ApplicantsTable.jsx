@@ -15,6 +15,7 @@ import { APPLICATION_API_END_POINT } from "../../utils/constant";
 import { toast } from "sonner";
 import axios from "axios";
 import { setApplications } from "../../redux/applicationSlice";
+import ChatButton from "../chat/ChatButton";
 
 const shortlistingStatus = ["applied", "interviewed", "offered", "rejected"];
 
@@ -64,7 +65,7 @@ const ApplicantsTable = () => {
             <TableHead>Resume</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -107,23 +108,32 @@ const ApplicantsTable = () => {
                       {item.status || 'applied'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right cursor-pointer">
-                    <Popover open={openPopover === item._id} onOpenChange={(open) => setOpenPopover(open ? item._id : null)}>
-                      <PopoverTrigger>
-                        <MoreHorizontal />
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        {shortlistingStatus.map((status, index) => (
-                          <div 
-                            onClick={() => statusHandler(status, item._id)} 
-                            key={index} 
-                            className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            <span className="capitalize">{status}</span>
-                          </div>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <ChatButton
+                        applicationId={item._id}
+                        chatPartner={item.applicant}
+                        jobTitle={item.job?.title}
+                        variant="icon"
+                        unreadCount={item.unreadCount || 0}
+                      />
+                      <Popover open={openPopover === item._id} onOpenChange={(open) => setOpenPopover(open ? item._id : null)}>
+                        <PopoverTrigger>
+                          <MoreHorizontal />
+                        </PopoverTrigger>
+                        <PopoverContent>
+                          {shortlistingStatus.map((status, index) => (
+                            <div 
+                              onClick={() => statusHandler(status, item._id)} 
+                              key={index} 
+                              className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer"
+                            >
+                              <span className="capitalize">{status}</span>
+                            </div>
+                          ))}
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
