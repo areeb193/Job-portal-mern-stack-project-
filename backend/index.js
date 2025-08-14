@@ -26,7 +26,7 @@ const io = new Server(httpServer, {
 });
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the Job Portal Backend!');   });
+  res.send('Welcome to the InternshipPortal Backend!');   });
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -35,12 +35,12 @@ const Navbar = () => {
     }
   }
   return (
-    <div className='bg-white'>
-      <div className='flex items-center justify-between mx-auto max-w-7xl h-16'>
-        <div>
-          <h1 className='text-2xl font-bold'>Internship <span className='text-[#F83002]'>Portal</span></h1>
+    <div className='sticky top-0 z-50 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-white/20 shadow-sm'>
+      <div className='flex items-center justify-between mx-auto max-w-7xl h-16 px-4'>
+        <div className="select-none">
+          <h1 className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#6A38C2] to-[#F83002]'>Internship<span className='ml-1'>Portal</span></h1>
         </div>
-        <div className='flex items-center gap-12'>
+        <div className='flex items-center gap-8'>
           {/* JobLensAI Button */}
           <Link to="https://job-lens-ai-six.vercel.app/" target="_blank" rel="noopener noreferrer">
             <Button
@@ -56,15 +56,15 @@ const Navbar = () => {
             {
               user && user.role==='recruiter' ?(
                 <>
-                <li><Link to="/admin/companies">Companies</Link></li>
-                <li><Link to="/admin/jobs">Internships</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/admin/companies">Companies</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/admin/jobs">Internships</Link></li>
                 </>
               ):(
                 <>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/jobs">Internship</Link></li>
-                <li><Link to="/browse">Browse</Link></li>
-                <li><Link to="/job-hunt">Internship Hunt</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/">Home</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/jobs">Internship</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/browse">Browse</Link></li>
+                <li><Link className="hover:underline underline-offset-4 hover:text-[#6A38C2] transition-colors" to="/job-hunt">Internship Hunt</Link></li>
                 </>
               )
             }
@@ -74,26 +74,26 @@ const Navbar = () => {
           {/* User Buttons */}
           {!user ? (
             <div className='flex items-center gap-3'>
-              <Link to="/Login"><Button variant="outline" className="mr-2">Login</Button></Link>
-              <Link to="/Signup"><Button className="bg-[#7209b7] text-white">Signup</Button></Link>
+              <Link to="/Login"><Button variant="outline" className="mr-2 hover:shadow-md transition-all">Login</Button></Link>
+              <Link to="/Signup"><Button className="bg-gradient-to-r from-[#6A38C2] to-[#F83002] text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">Signup</Button></Link>
             </div>
           ) : (
             <Popover>
               <PopoverTrigger asChild>
-                <Avatar className='cursor-pointer'>
+                <Avatar className='cursor-pointer ring-1 ring-black/5 hover:ring-[#6A38C2]/30 transition-all'>
                   <AvatarImage src={user?.profile?.profilePicture} alt="@shadcn" />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
               </PopoverTrigger>
-              <PopoverContent>
+              <PopoverContent className='rounded-xl shadow-xl border border-gray-100'>
                 <div className='flex gap-4 space-y-2'>
-                  <Avatar className='cursor-pointer'>
+                  <Avatar className='cursor-pointer ring-1 ring-black/5'>
                     <AvatarImage src={user?.profile?.profilePicture} alt="@shadcn" />
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                   <div>
                     <h4 className='font-medium'>{user?.fullname}</h4>
-                                         <p className='text-sm text-muted-foreground'>{user?.profile?.bio}</p>
+                    <p className='text-sm text-muted-foreground'>{user?.profile?.bio}</p>
                   </div>
                 </div>
                 <div className='flex flex-col my-2 text-gray-600'>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Table,
   TableCaption,
@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { APPLICATION_API_END_POINT } from "../../utils/constant";
 import { toast } from "sonner";
 import axios from "axios";
+import api from "../../utils/axiosConfig";
 import { setApplications } from "../../redux/applicationSlice";
 import ChatButton from "../chat/ChatButton";
 
@@ -21,6 +22,7 @@ const shortlistingStatus = ["applied", "interviewed", "offered", "rejected"];
 
 const ApplicantsTable = () => {
   const { applicants } = useSelector((state) => state.application);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [openPopover, setOpenPopover] = useState(null);
 
@@ -52,6 +54,36 @@ const ApplicantsTable = () => {
   };
 
   console.log("Applicants data:", applicants); // Debug log to see actual data structure
+
+  // Compute unread count for the current user by querying the chat for this application
+  const fetchUnreadCount = useCallback(async ({ applicationId }) => {
+    if (!applicationId || !user?._id) return 0;
+    try {
+      const res = await api.get(`/api/v1/chat/chats/application/${applicationId}`);
+      const chat = res.data?.chat;
+      if (!chat) return 0;
+      const me = user._id;
+      if (chat?.student?._id === me) return chat?.unreadCount?.student ?? 0;
+      if (chat?.recruiter?._id === me) return chat?.unreadCount?.recruiter ?? 0;
+      return 0;
+  } catch {
+      // 404 if chat doesn't exist yet
+      return 0;
+    }
+  }, [user?._id]);
+
+  // Mark messages as seen for the current user on open
+  const markSeen = useCallback(async ({ applicationId }) => {
+    if (!applicationId || !user?._id) return;
+    try {
+      const res = await api.get(`/api/v1/chat/chats/application/${applicationId}`);
+      const chat = res.data?.chat;
+      if (!chat?._id) return;
+      await api.put(`/api/v1/chat/chats/${chat._id}/read`);
+    } catch {
+      /* ignore */
+    }
+  }, [user?._id]);
 
   return (
     <div>
@@ -116,6 +148,12 @@ const ApplicantsTable = () => {
                         jobTitle={item.job?.title}
                         variant="icon"
                         unreadCount={item.unreadCount || 0}
+                        // enable live unread badge via socket + polling
+                        userId={user?._id}
+                        role={user?.role}
+                        pollInterval={0}
+                        fetchUnreadCount={fetchUnreadCount}
+                        markSeen={markSeen}
                       />
                       <Popover open={openPopover === item._id} onOpenChange={(open) => setOpenPopover(open ? item._id : null)}>
                         <PopoverTrigger>
