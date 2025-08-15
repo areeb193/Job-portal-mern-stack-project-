@@ -16,14 +16,17 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 const CompaniesTable = () => {
   const { companies, searchCompanyByText } = useSelector((store) => store.company);
-  const [filterCompany , setfilterCompany] =useState(companies);
+  const [filterCompany , setfilterCompany] = useState(Array.isArray(companies) ? companies : []);
   const navigate = useNavigate();
   useEffect(()=>{
-    const filteredCompany = companies.length > 0 && companies.filter((company)=>{
-      if(!searchCompanyByText){
-        return true
-      };
-      return company?.name?.toLowerCase().includes(searchCompanyByText.toLowerCase());
+    if (!Array.isArray(companies)) {
+      setfilterCompany([]);
+      return;
+    }
+    const text = (searchCompanyByText || '').toLowerCase();
+    const filteredCompany = companies.filter((company)=>{
+      if (!text) return true;
+      return company?.name?.toLowerCase().includes(text);
     });
     setfilterCompany(filteredCompany);
   },[companies,searchCompanyByText])
@@ -46,9 +49,9 @@ const CompaniesTable = () => {
                 You have not registered any company yet
               </TableCell>
             </TableRow>
-          ) : (
+      ) : (
             <>
-              {filterCompany.map((company) => {
+        {(filterCompany || []).map((company) => {
                 return (
                   <TableRow key={company._id}>
                     <TableCell>
