@@ -27,7 +27,7 @@ export const applyJob = async (req, res) => {
     
         
 } catch (error) {
-        console.log(error);
+    console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 };
@@ -40,8 +40,8 @@ export const getAppliedJobs = async (req, res) => {
         return res.status(404).json({ message: 'No applications found', success: false });
     }
     return res.status(200).json({ message: 'Applications retrieved successfully', success: true, application: applications });
-   } catch (error) {
-    console.log(error);
+    } catch (error) {
+     console.error(error);
     return res.status(500).json({ message: 'Server error', success: false });
    }
 
@@ -56,7 +56,7 @@ export const getApplicants = async (req, res) => {
     }
     return res.status(200).json({ message: 'Applicants retrieved successfully', success: true, applicants: job.applications || [] });
  } catch (error) {
-    console.log(error);
+     console.error(error);
     return res.status(500).json({ message: 'Server error', success: false });
  }
 
@@ -80,7 +80,7 @@ try {
     return res.status(200).json({ message: 'Application status updated successfully', success: true, application });
     
 } catch (error) {
- console.log(error);
+ console.error(error);
     return res.status(500).json({ message: 'Server error', success: false });   
 }
 

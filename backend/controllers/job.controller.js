@@ -22,7 +22,7 @@ export const postJob = async (req, res) => {
         });
         return res.status(201).json({ message: 'Job posted successfully', success: true, job });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 }
@@ -50,7 +50,7 @@ export const getJobs = async (req, res) => {
             }
             return res.status(200).json({ message: 'Jobs retrieved successfully', success: true, jobs });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 }
@@ -64,7 +64,7 @@ export const getJobById = async (req, res) => {
         }
         return res.status(200).json({ message: 'Job retrieved successfully', success: true, job });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 } 
@@ -83,7 +83,7 @@ export const getAdminJobs = async (req, res) => {
 
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 };
@@ -96,7 +96,7 @@ export const getAllJobs = async (req, res) => {
         }
         return res.status(200).json({ message: 'Jobs retrieved successfully', success: true, jobs });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Server error', success: false });
     }
 }

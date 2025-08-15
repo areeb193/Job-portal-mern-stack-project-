@@ -13,7 +13,7 @@ const isAuthenticated = (req, res, next) => {
         req.id = decoded.UserId; 
         next();  
     } catch (error) {
-        console.log('Authentication error:', error);
+        console.error('Authentication error:', error);
         return res.status(401).json({ message: 'Invalid or expired token', success: false });
     }
 };

@@ -11,10 +11,12 @@ import companyRoutes from './routes/company.route.js';
 import applicationRoutes from './routes/application.route.js';
 import jobHuntRoutes from './routes/jobHunt.route.js';
 import chatRoutes from './routes/chat.route.js';
-
+import path from 'path';
 dotenv.config({});
 const app = express();
 const httpServer = createServer(app);
+
+const _dirname = path.resolve();
 
 // Socket.IO setup
 const io = new Server(httpServer, {
@@ -25,8 +27,10 @@ const io = new Server(httpServer, {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the InternshipPortal Backend!');   });
+// Health check endpoint (keep a simple backend response under /api)
+app.get('/api/health', (req, res) => {
+  res.send('Welcome to the InternshipPortal Backend!');
+});
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,19 +43,16 @@ app.use(cors(corsOptions));
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  
   
   // Join chat room based on application
   socket.on('join-chat', (applicationId) => {
     socket.join(`chat-${applicationId}`);
-    console.log(`User joined chat room: chat-${applicationId}`);
   });
   
   // Handle incoming messages
   socket.on('send-message', async (data) => {
     const { chatId, senderId, content, applicationId } = data;
-    
-    console.log('Socket received message:', { chatId, senderId, content, applicationId });
     
     // Broadcast to all users in the chat room
     io.to(`chat-${applicationId}`).emit('new-message', {
@@ -60,17 +61,23 @@ io.on('connection', (socket) => {
       content,
       timestamp: new Date()
     });
-    
-    console.log('Message broadcasted to chat room:', `chat-${applicationId}`);
   });
   
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    
   });
 });
 
 const PORT = process.env.PORT || 8000;
 
+// Serve built frontend assets
+app.use(express.static(path.join(_dirname, "/frontend/dist")));
+// Express 5-safe catch-all: serve SPA for non-API routes
+app.get(/^\/(?!api\/).*/, (req, res) => {
+  res.sendFile(path.join(_dirname, 'frontend', 'dist', 'index.html'));
+});
+
+// API routes
 app.use('/api/v1/user', userRoutes);
 //http://localhost:8000/api/v1/user/register
 //http://localhost:8000/api/v1/user/login
@@ -86,9 +93,9 @@ app.use('/api/v1/chat', chatRoutes);
 //http://localhost:8000/api/v1/application/status/:id/update
 //http://localhost:8000/api/v1/job/get
 
+// Note: static + SPA catch-all are registered above to ensure '/' serves the frontend
 
 httpServer.listen(PORT, () => {
     connectDB();
-  console.log(`Connected to MongoDB`);
-  console.log(`Server is running on http://localhost:${PORT}`);
+  
 });

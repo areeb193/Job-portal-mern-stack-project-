@@ -44,7 +44,7 @@ export const searchJobs = async (req, res) => {
       });
     }
 
-    console.log(`Making API call for ${field || 'general'} search in ${city}, ${country}`);
+    
     
     // Build search query based on field
     let searchQuery = `internship jobs in ${city}`;

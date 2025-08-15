@@ -20,7 +20,7 @@ export const  registerCompany = async (req, res) => {
         });
         return res.status(201).json({message: 'Company registered successfully', success: true, company});
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({message: 'Server error', success: false});
     }
 };
@@ -33,8 +33,8 @@ export const getCompany = async (req, res) => {
         return res.status(404).json({message: 'No companies found', success: false});
     }
     return res.status(200).json({message: 'Companies retrieved successfully', success: true, companies});
-   } catch (error) {
-    console.log(error);
+    } catch (error) {
+     console.error(error);
     return res.status(500).json({message: 'Server error', success: false});
    }
 
@@ -49,7 +49,7 @@ export const getCompanyById = async (req, res) => {
     }
     return res.status(200).json({message: 'Company retrieved successfully', success: true, company});
    } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({message: 'Server error', success: false});
    }
 };
@@ -68,7 +68,7 @@ export const updateCompany = async (req, res) => {
                 const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
                 updateData.logo = cloudResponse.secure_url;
             } catch (uploadError) {
-                console.log('File upload error:', uploadError);
+                console.error('File upload error:', uploadError);
                 return res.status(400).json({message: 'File upload failed', success: false});
             }
         }
@@ -81,7 +81,7 @@ export const updateCompany = async (req, res) => {
         
         return res.status(200).json({message: 'Company updated successfully', success: true, company});
     } catch (error) {
-        console.log('Update company error:', error);
+        console.error('Update company error:', error);
         return res.status(500).json({message: 'Server error', success: false});
     }
 }
