@@ -1,5 +1,5 @@
 import React from 'react'
-import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious }from './ui/Carousel'
+import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious }from './ui/carousel'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
