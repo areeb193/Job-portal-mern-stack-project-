@@ -13,7 +13,6 @@ import JobHunt from './components/JobHunt';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import CompanyCreate from './components/admin/CompanyCreate';
 import CompanySetup from './components/admin/CompanySetup';
-import Job from './components/job';
 import Adminjobs from './components/admin/Adminjobs';
 import PostJob from './components/admin/PostJob';
 import Applicants from './components/admin/Applicants';
