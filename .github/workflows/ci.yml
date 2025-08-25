@@ -1,0 +1,160 @@
+name: CI / Build / Test / Auto-Merge
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build frontend (matrix)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: build-npm-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            build-npm-${{ matrix.node-version }}-
+
+      - name: Install backend dependencies
+        run: |
+          if [ -f backend/package-lock.json ]; then
+            npm ci --prefix backend --no-audit --no-fund
+          else
+            npm install --prefix backend --no-audit --no-fund
+          fi
+
+      - name: Install frontend dependencies
+        run: |
+          if [ -f frontend/package-lock.json ]; then
+            npm ci --prefix frontend --no-audit --no-fund
+          else
+            npm install --prefix frontend --no-audit --no-fund
+          fi
+
+      - name: Build frontend
+        run: npm run build --prefix frontend
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ matrix.node-version }}
+          path: frontend/dist
+
+  test:
+    name: Test (matrix)
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f backend/package-lock.json ]; then
+            npm ci --prefix backend --no-audit --no-fund
+          else
+            npm install --prefix backend --no-audit --no-fund
+          fi
+          if [ -f frontend/package-lock.json ]; then
+            npm ci --prefix frontend --no-audit --no-fund
+          else
+            npm install --prefix frontend --no-audit --no-fund
+          fi
+
+      - name: Build frontend for Playwright
+        run: |
+          npm run build --prefix frontend
+
+      - name: Serve frontend dist on port 8000
+        run: |
+          # use a lightweight static server so Playwright can test without backend DB
+          npx http-server frontend/dist -p 8000 --silent &
+          for i in {1..30}; do
+            if curl -sS http://localhost:8000 > /dev/null; then
+              echo "static server is up"; break
+            fi
+            echo "waiting for static server... ($i)"; sleep 1;
+          done
+
+      - name: Run Playwright tests
+        run: |
+          npx playwright install --with-deps
+          npx playwright test
+        env:
+          NODE_ENV: test
+
+  pr_merge:
+    name: Create PR & Auto-merge (feature → main)
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find/create PR and attempt auto-merge
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = process.env.GITHUB_REF.replace('refs/heads/','');
+            const base = 'main';
+            // Search for existing open PR
+            const existing = await github.rest.pulls.list({ owner, repo, head: `${owner}:${head}`, base, state: 'open' });
+            let pr_number;
+            if (existing.data.length) {
+              pr_number = existing.data[0].number;
+              console.log(`Found existing PR #${pr_number}`);
+            } else {
+              const pr = await github.rest.pulls.create({ owner, repo, head, base, title: `Auto PR: ${head} → ${base} (CI)`, body: `Automated PR created by CI: ${head} → ${base}. Build+Tests passed.` });
+              pr_number = pr.data.number;
+              console.log(`Created PR #${pr_number}`);
+            }
+
+            // Attempt to merge the PR
+            try {
+              await github.rest.pulls.merge({ owner, repo, pull_number: pr_number, merge_method: 'merge' });
+              console.log(`PR #${pr_number} merged successfully.`);
+            } catch (err) {
+              console.warn(`Auto-merge failed: ${err.message}`);
+              try { await github.rest.pulls.update({ owner, repo, pull_number: pr_number, body: `Auto-merge attempted but blocked: ${err.message}. Build+Tests succeeded.` }); } catch(e) { console.warn('Could not update PR body:', e.message); }
+            }
