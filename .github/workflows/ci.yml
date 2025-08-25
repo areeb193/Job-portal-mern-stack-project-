@@ -73,17 +73,26 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Run backend tests
-        run: npm test --if-present
-        env:
-          NODE_ENV: test
-
-      - name: Run Playwright tests
         run: |
-          npx playwright install --with-deps
-          npx playwright test
+          npm ci --prefix backend
+          npm ci --prefix frontend
+
+      - name: Start backend server
+        run: |
+          # run backend in background on port 8000
+          node backend/index.js &
+          # wait for server to respond (max ~30s)
+          for i in {1..30}; do
+            if curl -sS http://localhost:8000 > /dev/null; then
+              echo "backend is up"; break
+            fi
+            echo "waiting for backend... ($i)"; sleep 1;
+          done
+
+      - name: Run Playwright tests from frontend
+        run: |
+          npm --prefix frontend exec -- npx playwright install --with-deps
+          npm --prefix frontend exec -- npx playwright test
         env:
           NODE_ENV: test
 
@@ -99,8 +108,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create or find PR from feature branch to main
-        id: create_pr
+      - name: Find/create PR and attempt auto-merge
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -111,38 +119,21 @@ jobs:
             const base = 'main';
             // Search for existing open PR
             const existing = await github.rest.pulls.list({ owner, repo, head: `${owner}:${head}`, base, state: 'open' });
+            let pr_number;
             if (existing.data.length) {
-              console.log(`Found existing PR #${existing.data[0].number}`);
-              return { pr_number: existing.data[0].number };
+              pr_number = existing.data[0].number;
+              console.log(`Found existing PR #${pr_number}`);
+            } else {
+              const pr = await github.rest.pulls.create({ owner, repo, head, base, title: `Auto PR: ${head} → ${base} (CI)`, body: `Automated PR created by CI: ${head} → ${base}. Build+Tests passed.` });
+              pr_number = pr.data.number;
+              console.log(`Created PR #${pr_number}`);
             }
-            const pr = await github.rest.pulls.create({ owner, repo, head, base, title: `Auto PR: ${head} → ${base} (CI)`, body: `Automated PR created by CI: ${head} → ${base}. Build+Tests passed.` });
-            console.log(`Created PR #${pr.data.number}`);
-            return { pr_number: pr.data.number };
 
-      - name: Capture PR number
-        if: ${{ steps.create_pr.outputs.pr_number != '' }}
-        run: |
-          echo "pr_number=${{ steps.create_pr.outputs.pr_number }}" >> $GITHUB_OUTPUT
-
-      - name: Attempt to merge PR automatically
-        if: ${{ steps.create_pr.outputs.pr_number != '' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const pull_number = parseInt(process.env.PR_NUMBER || process.env.PR_NUMBER_FALLBACK || '', 10) || parseInt(core.getInput('pr_number', { required: false }) || '', 10);
-            if (!pull_number) {
-              console.warn('No PR number available to merge');
-              return;
-            }
+            // Attempt to merge the PR
             try {
-              await github.rest.pulls.merge({ owner, repo, pull_number, merge_method: 'merge' });
-              console.log(`PR #${pull_number} merged successfully.`);
+              await github.rest.pulls.merge({ owner, repo, pull_number: pr_number, merge_method: 'merge' });
+              console.log(`PR #${pr_number} merged successfully.`);
             } catch (err) {
               console.warn(`Auto-merge failed: ${err.message}`);
-              try { await github.rest.pulls.update({ owner, repo, pull_number, body: `Auto-merge attempted but blocked: ${err.message}. Build+Tests succeeded.` }); } catch(e) { console.warn('Could not update PR body:', e.message); }
+              try { await github.rest.pulls.update({ owner, repo, pull_number: pr_number, body: `Auto-merge attempted but blocked: ${err.message}. Build+Tests succeeded.` }); } catch(e) { console.warn('Could not update PR body:', e.message); }
             }
-        env:
-          PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}

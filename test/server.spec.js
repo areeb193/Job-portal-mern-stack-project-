@@ -1,5 +1,5 @@
-// test/server.spec.js
-const { test, expect } = require('@playwright/test');
+// test/server.spec.js (ESM)
+import { test, expect } from '@playwright/test';
 
 test('local server is running', async ({ page }) => {
   // Visit the local server URL
