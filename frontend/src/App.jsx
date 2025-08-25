@@ -16,6 +16,8 @@ import CompanySetup from './components/admin/CompanySetup';
 import Adminjobs from './components/admin/Adminjobs';
 import PostJob from './components/admin/PostJob';
 import Applicants from './components/admin/Applicants';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 const appRouter = createBrowserRouter([
   {
@@ -88,6 +90,29 @@ const appRouter = createBrowserRouter([
 ])
 
 function App() {
+  // Session guard: clear persisted state if user switches accounts
+  const userId = useSelector((s) => s.auth?.user?._id);
+  useEffect(() => {
+    const key = 'persist_user_id';
+    const prev = localStorage.getItem(key);
+    if (userId) {
+      if (prev && prev !== userId) {
+        try {
+          localStorage.removeItem('persist:root');
+          sessionStorage.clear();
+  } catch {
+          // ignore
+        }
+        localStorage.setItem(key, userId);
+        // Reload to rehydrate fresh state for the new user
+        window.location.reload();
+      } else if (!prev) {
+        localStorage.setItem(key, userId);
+      }
+    } else if (prev) {
+      localStorage.removeItem(key);
+    }
+  }, [userId]);
 
   return (
     <div>

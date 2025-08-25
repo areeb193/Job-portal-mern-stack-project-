@@ -26,7 +26,6 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.log('Axios interceptor error:', error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
       // Clear user data and redirect to login
       store.dispatch(logout());

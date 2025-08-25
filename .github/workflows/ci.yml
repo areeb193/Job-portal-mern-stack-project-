@@ -1,0 +1,182 @@
+name: CI / Build / Test / PR-Merge
+
+# Run on pushes to feature branches (all except main) and PRs targeting main
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # optional: allows manual run from GitHub Actions tab
+
+permissions:
+  contents: write       # allow workflow to read/write repo contents (needed for commits)
+  pull-requests: write  # allow workflow to create/update/merge PRs
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MONGO_URI: ${{ secrets.MONGO_URI }}
+  PORT: ${{ secrets.PORT }}
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  CLOUD_NAME: ${{ secrets.CLOUD_NAME }}
+  API_KEY: ${{ secrets.API_KEY }}
+  API_SECRET: ${{ secrets.API_SECRET }}
+  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || '' }}
+
+jobs:
+  build:
+    name: Build (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: npm ci
+        env:
+          NODE_ENV: development
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+        env:
+          NODE_ENV: production
+
+      - name: Build frontend
+        run: npm run build --prefix frontend
+        env:
+          NODE_ENV: production
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ matrix.node-version }}
+          path: frontend/dist
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backend tests
+        run: npm test --if-present
+        env:
+          NODE_ENV: test
+
+      - name: Run Playwright frontend tests
+        run: npx playwright install --with-deps && npx playwright test
+        env:
+          NODE_ENV: test
+
+  pr_merge:
+    name: Create PR & Auto-merge (feature → main)
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get branch name
+        id: vars
+        run: echo "branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - name: Create or find PR
+        id: create_pr
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = process.env.GITHUB_REF.replace('refs/heads/','');
+            const base = 'main';
+
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: `${owner}:${head}`,
+              base,
+              state: 'open'
+            });
+
+            if (existing.data.length) {
+              console.log(`Found existing PR #${existing.data[0].number}`);
+              return { pr_number: existing.data[0].number };
+            }
+
+            const pr = await github.rest.pulls.create({
+              owner,
+              repo,
+              head,
+              base,
+              title: `Auto PR: ${head} → ${base} (CI)`,
+              body: `Automated PR created by CI: ${head} → ${base}. Build + Tests passed.`
+            });
+
+            console.log(`Created PR #${pr.data.number}`);
+            return { pr_number: pr.data.number };
+
+      - name: Attempt auto-merge
+        if: steps.create_pr.outputs.pr_number != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = parseInt('${{ steps.create_pr.outputs.pr_number }}', 10);
+
+            try {
+              await github.rest.pulls.merge({
+                owner,
+                repo,
+                pull_number,
+                merge_method: 'merge'
+              });
+              console.log(`PR #${pull_number} merged successfully.`);
+            } catch (err) {
+              console.warn(`Auto-merge blocked: ${err.message}`);
+              try {
+                await github.rest.pulls.update({
+                  owner,
+                  repo,
+                  pull_number,
+                  body: `Auto-merge attempted but blocked: ${err.message}. Build+Tests succeeded.`
+                });
+              } catch (e) {
+                console.warn('Could not update PR body:', e.message);
+              }
+            }
