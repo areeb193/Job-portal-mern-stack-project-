@@ -40,10 +40,20 @@ jobs:
             build-npm-${{ matrix.node-version }}-
 
       - name: Install backend dependencies
-        run: npm ci
+        run: |
+          if [ -f backend/package-lock.json ]; then
+            npm ci --prefix backend --no-audit --no-fund
+          else
+            npm install --prefix backend --no-audit --no-fund
+          fi
 
       - name: Install frontend dependencies
-        run: npm ci --prefix frontend
+        run: |
+          if [ -f frontend/package-lock.json ]; then
+            npm ci --prefix frontend --no-audit --no-fund
+          else
+            npm install --prefix frontend --no-audit --no-fund
+          fi
 
       - name: Build frontend
         run: npm run build --prefix frontend
@@ -74,25 +84,36 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --prefix backend
-          npm ci --prefix frontend
+          if [ -f backend/package-lock.json ]; then
+            npm ci --prefix backend --no-audit --no-fund
+          else
+            npm install --prefix backend --no-audit --no-fund
+          fi
+          if [ -f frontend/package-lock.json ]; then
+            npm ci --prefix frontend --no-audit --no-fund
+          else
+            npm install --prefix frontend --no-audit --no-fund
+          fi
 
-      - name: Start backend server
+      - name: Build frontend for Playwright
         run: |
-          # run backend in background on port 8000
-          node backend/index.js &
-          # wait for server to respond (max ~30s)
+          npm run build --prefix frontend
+
+      - name: Serve frontend dist on port 8000
+        run: |
+          # use a lightweight static server so Playwright can test without backend DB
+          npx http-server frontend/dist -p 8000 --silent &
           for i in {1..30}; do
             if curl -sS http://localhost:8000 > /dev/null; then
-              echo "backend is up"; break
+              echo "static server is up"; break
             fi
-            echo "waiting for backend... ($i)"; sleep 1;
+            echo "waiting for static server... ($i)"; sleep 1;
           done
 
-      - name: Run Playwright tests from frontend
+      - name: Run Playwright tests
         run: |
-          npm --prefix frontend exec -- npx playwright install --with-deps
-          npm --prefix frontend exec -- npx playwright test
+          npx playwright install --with-deps
+          npx playwright test
         env:
           NODE_ENV: test
 
