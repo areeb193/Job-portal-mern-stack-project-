@@ -7,7 +7,6 @@ import { setSearchedQuery } from '../redux/jobSlice'
 const category =[
     "Software Development",
     "Data Science",
-    "Design & Creative",
     "Marketing & Sales",
     "Finance & Accounting",
     "Human Resources",
